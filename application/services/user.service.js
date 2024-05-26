@@ -12,50 +12,27 @@ class UserService {
         return await UserModel.find().select({ __v: 0, log: 0 }).exec()
     }
 
-    async pushNewExercise(id, exercise) {
-        return await UserModel.findByIdAndUpdate(
-            { _id: id },
-            { $push: { "log": { ...exercise } } },
-            { safe: true, upsert: true, new: true },
-        )
+    async findById(id) {        
+        try {
+            return await UserModel.findById({ _id: id }).exec();
+        } catch (error) {
+            return error
+        }
     }
 
     async findLogsByUserId(id, from = null, to = null, limit = null) {
-        const query = UserModel.findOne({ _id: id });
+        const query = UserModel.findOne({ _id: id }).select({ '__v': 0 });
 
-        const matchCriteria = {};
-
-        if (limit != null) {
+        if (limit !== null) {
             query.select({
                 'log': {
                     $slice: Number(limit),
                 },
             });
         }
-        if (from !== null || to !== null) {
-            const dateFilter = {};
-            if (from !== null) {
-                dateFilter['$gte'] = new Date(from);
-            }
-            if (to !== null) {
-                dateFilter['$lte'] = new Date(to);
-            }
-
-            query.select({
-                'log': {
-                    $elemMatch: {
-                        date: dateFilter
-                    }
-                }
-            });
-        }
-
-
-        query.select({ '__v': 0 })
-
-
-        return await query.exec()
+        return await query.exec();
     }
+
 }
 
 module.exports = UserService
